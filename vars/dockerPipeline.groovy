@@ -1,3 +1,8 @@
+import com.i27academy.builds.Docker;
+
+def call(Map pipelineParams) {
+    Docker docker = new Docker(this)
+
 pipeline {
     agent {
         label "k8s-slave"
@@ -20,6 +25,11 @@ pipeline {
 
     environment {
         APPLICATION_NAME = "${pipelineParams.appName}"
+        DEV_HOST_PORT = "${pipelineParams.devHostPort}"
+        TEST_HOST_PORT = "${pipelineParams.testHostPort}"
+        STAGE_HOST_PORT = "${pipelineParams.stageHostPort}"
+        PROD_HOST_PORT = "${pipelineParams.prodHostPort}"
+        CONT_PORT = "${pipelineParams.contPort}"
         POM_VERSION = readMavenPom().getVersion()
         POM_PACKAGING = readMavenPom().getPackaging()
         DOCKER_HUB = 'docker.io/kishoresamala84'
@@ -89,7 +99,7 @@ pipeline {
             }
             steps {
                 script {
-                    deployToDocker('dev', '8005', '8232')
+                    deployToDocker('dev', "${pipelineParams.devHostPort}", "${pipelineParams.contPort}")
                 }
             }
         }
@@ -102,7 +112,7 @@ pipeline {
             }
             steps {
                 script {
-                    deployToDocker('test', '8006', '8232')
+                    deployToDocker('test', "${pipelineParams.testHostPort}", "${pipelineParams.contPort}")
                 }
             }
         }
@@ -116,7 +126,7 @@ pipeline {
             steps {
                 script {
                     imageValidation()
-                    deployToDocker('stage', '8007', '8232')
+                    deployToDocker('stage', "${pipelineParams.stageHostPort}", "${pipelineParams.contPort}")
                 }
             }
         }
@@ -129,7 +139,7 @@ pipeline {
             }
             steps {
                 script {
-                    deployToDocker('prod', '8008', '8232')
+                    deployToDocker('prod', "${pipelineParams.prodHostPort}", "${pipelineParams.contPort}")
                 }
             }
         }
@@ -178,3 +188,7 @@ def deployToDocker(envDeploy, hostPort, contPort) {
         }
     }
 }
+
+
+}
+
