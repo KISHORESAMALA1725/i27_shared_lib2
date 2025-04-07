@@ -1,7 +1,4 @@
-import com.i27academy.builds.Docker;
- def call(Map pipelineParams) {
-    Docker docker = new Docker(this)
-    pipeline {
+pipeline {
     agent {
         label "k8s-slave"
     }
@@ -22,7 +19,7 @@ import com.i27academy.builds.Docker;
     }
 
     environment {
-        APPLICATION_NAME = 'user'
+        APPLICATION_NAME = "${pipelineParams.appName}"
         POM_VERSION = readMavenPom().getVersion()
         POM_PACKAGING = readMavenPom().getPackaging()
         DOCKER_HUB = 'docker.io/kishoresamala84'
@@ -38,7 +35,7 @@ import com.i27academy.builds.Docker;
             }
             steps {
                 script {
-                    buildApp()
+                    docker.buildApp("${env.APPLICATION_NAME}")
                 }
             }
         }
@@ -180,5 +177,4 @@ def deployToDocker(envDeploy, hostPort, contPort) {
             sh "sshpass -p '$PASSWORD' ssh -o StrictHostKeyChecking=no '$USERNAME'@$dev_ip \"docker container run -dit -p $hostPort:$contPort --name ${env.APPLICATION_NAME}-'$envDeploy' ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}\""
         }
     }
-}
 }
