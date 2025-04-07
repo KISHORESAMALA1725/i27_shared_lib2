@@ -1,4 +1,7 @@
-pipeline {
+import com.i27academy.builds.Docker;
+ def call(Map pipelineParams) {
+    Docker docker = new Docker(this)
+    pipeline {
     agent {
         label "k8s-slave"
     }
@@ -177,4 +180,5 @@ def deployToDocker(envDeploy, hostPort, contPort) {
             sh "sshpass -p '$PASSWORD' ssh -o StrictHostKeyChecking=no '$USERNAME'@$dev_ip \"docker container run -dit -p $hostPort:$contPort --name ${env.APPLICATION_NAME}-'$envDeploy' ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}\""
         }
     }
+}
 }
