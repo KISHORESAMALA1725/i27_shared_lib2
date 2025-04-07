@@ -149,7 +149,7 @@ def call(Map pipelineParams) {
         }
     }
 
-    def buildApp() {
+def buildApp() {
     echo "***** Building the Application *****"
     sh "mvn clean package -DskipTest=true"
     archiveArtifacts 'target/*.jar'
