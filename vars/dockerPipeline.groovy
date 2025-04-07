@@ -12,7 +12,7 @@ pipeline {
         choice(name: 'buildOnly', choices: 'no\nyes', description: 'MVN build application')
         choice(name: 'scanOnly', choices: 'no\nyes', description: 'SonarQube scan app')
         choice(name: 'dockerbuildandpush', choices: 'no\nyes', description: 'dockerbuildandpush')
-        choice(name: 'deployto'$envDeploy'', choices: 'no\nyes', description: 'deploy to '$envDeploy'')
+        choice(name: 'deploytodev', choices: 'no\nyes', description: 'deploy to dev')
         choice(name: 'deploytotest', choices: 'no\nyes', description: 'deploy to test')
         choice(name: 'deploytostage', choices: 'no\nyes', description: 'deploy to stage')
         choice(name: 'deploytoprod', choices: 'no\nyes', description: 'deploytoprod')
@@ -81,15 +81,15 @@ pipeline {
             }
         }
 
-        stage('***** Deploy to '$envDeploy'-ENV *****') {
+        stage('***** Deploy to 'DEV'-ENV *****') {
             when {
                 expression {
-                    params.deployto'$envDeploy' == 'yes'
+                    params.deployto'dev' == 'yes'
                 }
             }
             steps {
                 script {
-                    deployToDocker(''$envDeploy'', '8005', '8232')
+                    deployToDocker('dev', '8005', '8232')
                 }
             }
         }
