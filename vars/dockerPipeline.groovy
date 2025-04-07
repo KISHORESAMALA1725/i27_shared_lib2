@@ -12,19 +12,14 @@ pipeline {
         choice(name: 'buildOnly', choices: 'no\nyes', description: 'MVN build application')
         choice(name: 'scanOnly', choices: 'no\nyes', description: 'SonarQube scan app')
         choice(name: 'dockerbuildandpush', choices: 'no\nyes', description: 'dockerbuildandpush')
-        choice(name: 'deploytodev', choices: 'no\nyes', description: 'deploy to dev')
+        choice(name: 'deployto'$envDeploy'', choices: 'no\nyes', description: 'deploy to '$envDeploy'')
         choice(name: 'deploytotest', choices: 'no\nyes', description: 'deploy to test')
         choice(name: 'deploytostage', choices: 'no\nyes', description: 'deploy to stage')
         choice(name: 'deploytoprod', choices: 'no\nyes', description: 'deploytoprod')
     }
 
     environment {
-        APPLICATION_NAME = "${pipelineParams.appName}"
-        DEV_HOST_PORT = "${pipelineParams.devHostPort}"
-        TEST_HOST_PORT = "${pipelineParams.testHostPort}"
-        STAGE_HOST_PORT = "${pipelineParams.stageHostPort}"
-        PROD_HOST_PORT = "${pipelineParams.prodHostPort}"
-        CONT_PORT = "${pipelineParams.contPort}"
+        APPLICATION_NAME = 'user'
         POM_VERSION = readMavenPom().getVersion()
         POM_PACKAGING = readMavenPom().getPackaging()
         DOCKER_HUB = 'docker.io/kishoresamala84'
@@ -86,15 +81,15 @@ pipeline {
             }
         }
 
-        stage('***** Deploy to DEV-ENV *****') {
+        stage('***** Deploy to '$envDeploy'-ENV *****') {
             when {
                 expression {
-                    params.deploytodev == 'yes'
+                    params.deployto'$envDeploy' == 'yes'
                 }
             }
             steps {
                 script {
-                    deployToDocker('dev', "${pipelineParams.devHostPort}", "${pipelineParams.contPort}")
+                    deployToDocker(''$envDeploy'', '8005', '8232')
                 }
             }
         }
@@ -107,7 +102,7 @@ pipeline {
             }
             steps {
                 script {
-                    deployToDocker('test', "${pipelineParams.testHostPort}", '"${pipelineParams.contPort}"')
+                    deployToDocker('test', '8006', '8232')
                 }
             }
         }
@@ -121,7 +116,7 @@ pipeline {
             steps {
                 script {
                     imageValidation()
-                    deployToDocker('stage', "${pipelineParams.stageHostPort}", '"${pipelineParams.contPort}"')
+                    deployToDocker('stage', '8007', '8232')
                 }
             }
         }
@@ -134,7 +129,7 @@ pipeline {
             }
             steps {
                 script {
-                    deployToDocker('prod', "${pipelineParams.prodHostPort}", '"${pipelineParams.contPort}"')
+                    deployToDocker('prod', '8008', '8232')
                 }
             }
         }
@@ -174,12 +169,12 @@ def deployToDocker(envDeploy, hostPort, contPort) {
     withCredentials([usernamePassword(credentialsId: 'john_docker_vm_passwd', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
         script {
             try {
-                sh "sshpass -p '$PASSWORD' ssh -o StrictHostKeyChecking=no '$USERNAME'@$dev_ip \"docker stop ${env.APPLICATION_NAME}-dev\""
-                sh "sshpass -p '$PASSWORD' ssh -o StrictHostKeyChecking=no '$USERNAME'@$dev_ip \"docker rm ${env.APPLICATION_NAME}-dev\""
+                sh "sshpass -p '$PASSWORD' ssh -o StrictHostKeyChecking=no '$USERNAME'@$dev_ip \"docker stop ${env.APPLICATION_NAME}-'$envDeploy'\""
+                sh "sshpass -p '$PASSWORD' ssh -o StrictHostKeyChecking=no '$USERNAME'@$dev_ip \"docker rm ${env.APPLICATION_NAME}-'$envDeploy'\""
             } catch (err) {
                 echo "Error Caught: $err"
             }
-            sh "sshpass -p '$PASSWORD' ssh -o StrictHostKeyChecking=no '$USERNAME'@$dev_ip \"docker container run -dit -p $hostPort:$contPort --name ${env.APPLICATION_NAME}-dev ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}\""
+            sh "sshpass -p '$PASSWORD' ssh -o StrictHostKeyChecking=no '$USERNAME'@$'$envDeploy'_ip \"docker container run -dit -p $hostPort:$contPort --name ${env.APPLICATION_NAME}-'$envDeploy' ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}\""
         }
     }
 }
