@@ -1,7 +1,7 @@
 import com.i27academy.builds.Docker;
 
 def call(Map pipelineParams) {
-    Docker docker = new Docker(this) {
+    Docker docker = new Docker(this) 
     pipeline {
         agent {
             label "k8s-slave"
@@ -191,5 +191,4 @@ def call(Map pipelineParams) {
 
     }
 
-}
 
