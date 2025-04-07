@@ -173,7 +173,8 @@ def imageValidation() {
         }
     }
 
-    def deployToDocker(envDeploy, hostPort, contPort) {
+
+def deployToDocker(envDeploy, hostPort, contPort) {
         echo "***** Deploying to $envDeploy environment *****"
         withCredentials([usernamePassword(credentialsId: 'john_docker_vm_passwd', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
             script {
