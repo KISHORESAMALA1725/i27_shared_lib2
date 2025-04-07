@@ -139,29 +139,31 @@ def call(Map pipelineParams) {
                 steps {
                     script {
                         deployToDocker('prod', "${env.PROD_HOST_PORT}", "${env.CONT_PORT}")
-                    }
                 }
             }
         }
     }
+}
 
-    def buildApp() {
-        echo "***** Building the Application *****"
-        sh "mvn clean package -DskipTest=true"
-        archiveArtifacts 'target/*.jar'
+}
+
+def buildApp() {
+    echo "***** Building the Application *****"
+    sh "mvn clean package -DskipTest=true"
+    archiveArtifacts 'target/*.jar'
+}
+
+def dockerBuildPush() {
+    echo "****** Building Docker image *******"
+    sh "cp ${WORKSPACE}/target/i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} ./.cicd"
+    sh "docker build --no-cache --build-arg JAR_SOURCE=i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} -t ${DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT} ./.cicd"
+    withCredentials([usernamePassword(credentialsId: 'kishoresamala84_docker_creds', usernameVariable: 'DOCKER_CREDS_USR', passwordVariable: 'DOCKER_CREDS_PSW')]) {
+        sh "docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}"
     }
+    sh "docker push ${DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}"
+}
 
-    def dockerBuildPush() {
-        echo "****** Building Docker image *******"
-        sh "cp ${WORKSPACE}/target/i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} ./.cicd"
-        sh "docker build --no-cache --build-arg JAR_SOURCE=i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} -t ${DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT} ./.cicd"
-        withCredentials([usernamePassword(credentialsId: 'kishoresamala84_docker_creds', usernameVariable: 'DOCKER_CREDS_USR', passwordVariable: 'DOCKER_CREDS_PSW')]) {
-            sh "docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}"
-        }
-        sh "docker push ${DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}"
-    }
-
-    def imageValidation() {
+def imageValidation() {
         echo '***** Attempting to pull the Docker image *****'
         try {
             sh "docker pull ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}"
@@ -188,6 +190,6 @@ def call(Map pipelineParams) {
         }
     }
 
-}
+
 
 
