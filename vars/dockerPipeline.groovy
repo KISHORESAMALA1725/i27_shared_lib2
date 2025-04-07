@@ -1,7 +1,7 @@
 import com.i27academy.builds.Docker;
 
 def call(Map pipelineParams) {
-    Docker docker = new Docker(this)
+    Docker docker = new Docker(this) {
 
 pipeline {
     agent {
@@ -189,6 +189,8 @@ def deployToDocker(envDeploy, hostPort, contPort) {
     }
 }
 
+
+}
 
 }
 
