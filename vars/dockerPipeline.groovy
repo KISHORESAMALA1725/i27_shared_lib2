@@ -145,8 +145,6 @@ def call(Map pipelineParams) {
     }
 }
 
-}
-
 def buildApp() {
     echo "***** Building the Application *****"
     sh "mvn clean package -DskipTest=true"
@@ -189,6 +187,9 @@ def imageValidation() {
             }
         }
     }
+}
+
+
 
 
 
